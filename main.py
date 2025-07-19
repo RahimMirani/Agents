@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-"""
-Person Research Agent - Phase 1
-Simple CLI interface for researching people using Google Gemini AI
-"""
-
 import os
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -13,11 +7,11 @@ def load_environment():
     load_dotenv()
     
     # Check if required API key is set
-    api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        print("❌ Error: GOOGLE_API_KEY not found in .env file")
+        print("❌ Error: GEMINI_API_KEY not found in .env file")
         print("Please add your Google API key to the .env file:")
-        print("GOOGLE_API_KEY=your_api_key_here")
+        print("GEMINI_API_KEY=your_api_key_here")
         return False
     return True
 
@@ -28,7 +22,7 @@ def setup_gemini():
         llm = ChatGoogleGenerativeAI(
             model="gemini-pro",
             temperature=0.3,
-            google_api_key=os.getenv("GOOGLE_API_KEY")
+            google_api_key=os.getenv("GEMINI_API_KEY")
         )
         return llm
     except Exception as e:
