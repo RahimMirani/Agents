@@ -1,7 +1,7 @@
 # Person Research Agent - Development Plan
 
 ## Project Overview
-A Python-based research agent that collects publicly available information about individuals from various online sources.
+A Python-based research agent that collects publicly/privately available information about individuals from various online sources.
 
 ## Tech Stack
 - **Backend**: Python + FastAPI
@@ -178,15 +178,3 @@ Research Agent/
     ├── templates/
     └── static/
 ```
-
-## Getting Started
-1. Set up Python virtual environment
-2. Install dependencies from requirements.txt
-3. Configure environment variables
-4. Run CLI interface: `python main.py`
-
-## Next Steps
-- Complete Phase 1 implementation
-- Test basic search functionality
-- Plan Phase 2 enhancements
-- Gather feedback and iterate 
