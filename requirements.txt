@@ -1,4 +1,3 @@
-# Phase 1 Dependencies - CLI with LangChain + Gemini
 requests>=2.31.0
 beautifulsoup4>=4.12.2
 python-dotenv>=1.0.0
@@ -12,4 +11,4 @@ langchain-community>=0.0.10
 # Development Dependencies
 pytest>=7.4.3
 black>=23.9.1
-flake8>=6.1.0 
+flake8>=6.1.0  
