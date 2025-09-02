@@ -11,4 +11,9 @@ langchain-community>=0.0.10
 # Development Dependencies
 pytest>=7.4.3
 black>=23.9.1
-flake8>=6.1.0  
+flake8>=6.1.0
+
+# Dependencies for Scheduling Agent
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib  
