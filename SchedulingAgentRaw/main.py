@@ -143,7 +143,61 @@ def add_event(service, summary, start_time_str, end_time_str, description=None):
     except Exception as e:
         print(f"An error occurred: {e}")
 
-def handle_natural_language_command(service, user_input):
+
+def check_availability(service, start_str, end_str):
+    """Finds and prints free slots in the calendar within a given time range."""
+    try:
+        local_tz_name = get_localzone_name()
+        start_time = dt.datetime.fromisoformat(start_str)
+        end_time = dt.datetime.fromisoformat(end_str)
+    except ValueError:
+        print("Invalid datetime format. Please use ISO format (e.g., YYYY-MM-DDTHH:MM:SS).")
+        return
+
+    print(f"Checking for availability from {start_time} to {end_time}...")
+
+    events_result = service.events().list(
+        calendarId='primary',
+        timeMin=start_time.isoformat() + 'Z',
+        timeMax=end_time.isoformat() + 'Z',
+        singleEvents=True,
+        orderBy='startTime'
+    ).execute()
+    events = events_result.get('items', [])
+
+    if not events:
+        print("You are completely free during this period.")
+        return
+
+    last_event_end = start_time
+    free_slots = []
+
+    for event in events:
+        event_start_str = event['start'].get('dateTime')
+        if not event_start_str:  # Skip all-day events
+            continue
+        
+        event_start = dt.datetime.fromisoformat(event_start_str).replace(tzinfo=None)
+
+        if last_event_end < event_start:
+            free_slots.append((last_event_end, event_start))
+        
+        event_end_str = event['end'].get('dateTime')
+        event_end = dt.datetime.fromisoformat(event_end_str).replace(tzinfo=None)
+        last_event_end = max(last_event_end, event_end)
+
+    if last_event_end < end_time:
+        free_slots.append((last_event_end, end_time))
+
+    if not free_slots:
+        print("No free slots found in the specified range.")
+    else:
+        print("You have the following free slots:")
+        for slot_start, slot_end in free_slots:
+            print(f"- From {slot_start.strftime('%Y-%m-%d %I:%M %p')} to {slot_end.strftime('%Y-%m-%d %I:%M %p')}")
+
+
+def LLM_to_function_call(service, user_input):
     """Uses an LLM to parse a natural language command and execute the corresponding function."""
     load_dotenv()
     api_key = os.getenv("GOOGLE_API_KEY")
@@ -222,58 +276,6 @@ def handle_natural_language_command(service, user_input):
         print(f"LLM Response was: {response.text}")
 
 
-def check_availability(service, start_str, end_str):
-    """Finds and prints free slots in the calendar within a given time range."""
-    try:
-        local_tz_name = get_localzone_name()
-        start_time = dt.datetime.fromisoformat(start_str)
-        end_time = dt.datetime.fromisoformat(end_str)
-    except ValueError:
-        print("Invalid datetime format. Please use ISO format (e.g., YYYY-MM-DDTHH:MM:SS).")
-        return
-
-    print(f"Checking for availability from {start_time} to {end_time}...")
-
-    events_result = service.events().list(
-        calendarId='primary',
-        timeMin=start_time.isoformat() + 'Z',
-        timeMax=end_time.isoformat() + 'Z',
-        singleEvents=True,
-        orderBy='startTime'
-    ).execute()
-    events = events_result.get('items', [])
-
-    if not events:
-        print("You are completely free during this period.")
-        return
-
-    last_event_end = start_time
-    free_slots = []
-
-    for event in events:
-        event_start_str = event['start'].get('dateTime')
-        if not event_start_str:  # Skip all-day events
-            continue
-        
-        event_start = dt.datetime.fromisoformat(event_start_str).replace(tzinfo=None)
-
-        if last_event_end < event_start:
-            free_slots.append((last_event_end, event_start))
-        
-        event_end_str = event['end'].get('dateTime')
-        event_end = dt.datetime.fromisoformat(event_end_str).replace(tzinfo=None)
-        last_event_end = max(last_event_end, event_end)
-
-    if last_event_end < end_time:
-        free_slots.append((last_event_end, end_time))
-
-    if not free_slots:
-        print("No free slots found in the specified range.")
-    else:
-        print("You have the following free slots:")
-        for slot_start, slot_end in free_slots:
-            print(f"- From {slot_start.strftime('%Y-%m-%d %I:%M %p')} to {slot_end.strftime('%Y-%m-%d %I:%M %p')}")
-
 
 def main():
     """The main function to run the scheduling agent."""
@@ -318,7 +320,7 @@ def main():
     elif args.command == 'availability':
         check_availability(service, args.start, args.end)
     elif args.command == 'ask':
-        handle_natural_language_command(service, args.query)
+        LLM_to_function_call(service, args.query)
 
 
 if __name__ == '__main__':
