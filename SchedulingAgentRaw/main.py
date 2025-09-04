@@ -9,7 +9,7 @@ from googleapiclient.discovery import build
 
 
 # If modifying these SCOPES, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 def authenticate_google():
     """Shows basic usage of the Google Calendar API.
@@ -102,6 +102,41 @@ def check_schedule_for_day(service, date_str=None):
 
         print(f"- {start_formatted}: {event['summary']}")
 
+def add_event(service, summary, start_time_str, end_time_str, description=None):
+    """Adds a new event to the primary calendar."""
+    try:
+        # Get the local timezone
+        local_tz = dt.datetime.now().astimezone().tzinfo
+        
+        # Parse start and end times
+        start_time = dt.datetime.fromisoformat(start_time_str).astimezone(local_tz)
+        end_time = dt.datetime.fromisoformat(end_time_str).astimezone(local_tz)
+
+    except ValueError:
+        print("Invalid datetime format. Please use ISO format (e.g., YYYY-MM-DDTHH:MM:SS).")
+        return
+
+    event = {
+        'summary': summary,
+        'description': description,
+        'start': {
+            'dateTime': start_time.isoformat(),
+            'timeZone': str(local_tz),
+        },
+        'end': {
+            'dateTime': end_time.isoformat(),
+            'timeZone': str(local_tz),
+        },
+    }
+
+    try:
+        created_event = service.events().insert(calendarId='primary', body=event).execute()
+        print(f"Event created successfully!")
+        print(f"View on Google Calendar: {created_event.get('htmlLink')}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
 def main():
     """The main function to run the scheduling agent."""
     parser = argparse.ArgumentParser(description="A CLI agent to manage your Google Calendar.")
@@ -113,7 +148,14 @@ def main():
     # 'check' command
     parser_check = subparsers.add_parser('check', help='Check the schedule for a specific day.')
     parser_check.add_argument('--date', type=str, help='The date to check in YYYY-MM-DD format. Defaults to today.')
-    
+
+    # 'add' command
+    parser_add = subparsers.add_parser('add', help='Add a new event to the calendar.')
+    parser_add.add_argument('--summary', type=str, required=True, help='The title of the event.')
+    parser_add.add_argument('--start', type=str, required=True, help='The start time in ISO format (YYYY-MM-DDTHH:MM:SS).')
+    parser_add.add_argument('--end', type=str, required=True, help='The end time in ISO format (YYYY-MM-DDTHH:MM:SS).')
+    parser_add.add_argument('--desc', type=str, help='An optional description for the event.')
+
     args = parser.parse_args()
 
     service = authenticate_google()
@@ -123,6 +165,9 @@ def main():
         list_upcoming_events(service)
     elif args.command == 'check':
         check_schedule_for_day(service, args.date)
+    elif args.command == 'add':
+        print("Attempting to add a new event...")
+        add_event(service, args.summary, args.start, args.end, args.desc)
 
 
 if __name__ == '__main__':
