@@ -1,4 +1,6 @@
 import os.path
+import datetime as dt
+
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -17,7 +19,7 @@ def authenticate_google():
     # created automatically when the authorization flow completes for the first time.
 
     if os.path.exists('SchedulingAgentRaw/token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        creds = Credentials.from_authorized_user_file('SchedulingAgentRaw/token.json', SCOPES)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
@@ -33,10 +35,28 @@ def authenticate_google():
     service = build('calendar', 'v3', credentials=creds)
     return service
 
+def list_upcoming_events(service):
+    """Lists the next 10 upcoming events from the user's primary calendar."""
+    now = dt.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+    print('Getting the upcoming 10 events')
+    events_result = service.events().list(calendarId='primary', timeMin=now,
+                                          maxResults=10, singleEvents=True,
+                                          orderBy='startTime').execute()
+    events = events_result.get('items', [])
+
+    if not events:
+        print('No upcoming events found.')
+        return
+
+    # Prints the start and name of the next 10 events
+    for event in events:
+        start = event['start'].get('dateTime', event['start'].get('date'))
+        print(start, event['summary'])
+
 if __name__ == '__main__':
     service = authenticate_google()
     print("Successfully authenticated with Google Calendar API.")
-    # We will add the logic to list events here in the next step.
+    list_upcoming_events(service)
     
 
 
