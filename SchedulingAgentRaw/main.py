@@ -1,6 +1,7 @@
 import os.path
 import datetime as dt
 import argparse
+from tzlocal import get_localzone_name
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -105,12 +106,12 @@ def check_schedule_for_day(service, date_str=None):
 def add_event(service, summary, start_time_str, end_time_str, description=None):
     """Adds a new event to the primary calendar."""
     try:
-        # Get the local timezone
-        local_tz = dt.datetime.now().astimezone().tzinfo
+        # Get the local timezone name
+        local_tz_name = get_localzone_name()
         
-        # Parse start and end times
-        start_time = dt.datetime.fromisoformat(start_time_str).astimezone(local_tz)
-        end_time = dt.datetime.fromisoformat(end_time_str).astimezone(local_tz)
+        # Parse start and end times from isoformat string
+        start_time = dt.datetime.fromisoformat(start_time_str)
+        end_time = dt.datetime.fromisoformat(end_time_str)
 
     except ValueError:
         print("Invalid datetime format. Please use ISO format (e.g., YYYY-MM-DDTHH:MM:SS).")
@@ -121,11 +122,11 @@ def add_event(service, summary, start_time_str, end_time_str, description=None):
         'description': description,
         'start': {
             'dateTime': start_time.isoformat(),
-            'timeZone': str(local_tz),
+            'timeZone': local_tz_name,
         },
         'end': {
             'dateTime': end_time.isoformat(),
-            'timeZone': str(local_tz),
+            'timeZone': local_tz_name,
         },
     }
 
