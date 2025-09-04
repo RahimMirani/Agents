@@ -51,21 +51,79 @@ def list_upcoming_events(service):
 
     # Prints the start and name of the next 10 events
     for event in events:
-        start = event['start'].get('dateTime', event['start'].get('date'))
-        print(start, event['summary'])
+        start_str = event['start'].get('dateTime', event['start'].get('date'))
+        
+        if 'T' in start_str:  # It's a dateTime
+            event_dt = dt.datetime.fromisoformat(start_str)
+            start_formatted = event_dt.strftime('%Y-%m-%d %I:%M %p')
+        else:  # It's an all-day event
+            start_formatted = start_str
+
+        print(f"{start_formatted} - {event['summary']}")
+
+def check_schedule_for_day(service, date_str=None):
+    """Checks the schedule for a given day and prints the events."""
+    if date_str:
+        try:
+            day = dt.datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            print("Invalid date format. Please use YYYY-MM-DD.")
+            return
+    else:
+        day = dt.date.today()
+
+    local_tz = dt.datetime.now().astimezone().tzinfo
+    time_min = dt.datetime.combine(day, dt.time.min, tzinfo=local_tz).isoformat()
+    time_max = dt.datetime.combine(day, dt.time.max, tzinfo=local_tz).isoformat()
+
+    print(f"Getting events for {day.strftime('%Y-%m-%d')}...")
+    events_result = service.events().list(
+        calendarId='primary',
+        timeMin=time_min,
+        timeMax=time_max,
+        singleEvents=True,
+        orderBy='startTime'
+    ).execute()
+    events = events_result.get('items', [])
+
+    if not events:
+        print(f"You are free on {day.strftime('%Y-%m-%d')}.")
+        return
+
+    print(f"Your schedule for {day.strftime('%Y-%m-%d')}:")
+    for event in events:
+        start_str = event['start'].get('dateTime', event['start'].get('date'))
+        
+        if 'T' in start_str:  # It's a dateTime
+            event_time = dt.datetime.fromisoformat(start_str)
+            start_formatted = event_time.strftime('%I:%M %p')
+        else:  # It's an all-day event
+            start_formatted = "All-day"
+
+        print(f"- {start_formatted}: {event['summary']}")
 
 def main():
     """The main function to run the scheduling agent."""
     parser = argparse.ArgumentParser(description="A CLI agent to manage your Google Calendar.")
-    parser.add_argument('command', choices=['list'], help='The command to execute (e.g., "list")')
+    subparsers = parser.add_subparsers(dest='command', required=True, help='Available commands')
 
+    # 'list' command
+    subparsers.add_parser('list', help='List the next 10 upcoming events.')
+
+    # 'check' command
+    parser_check = subparsers.add_parser('check', help='Check the schedule for a specific day.')
+    parser_check.add_argument('--date', type=str, help='The date to check in YYYY-MM-DD format. Defaults to today.')
+    
     args = parser.parse_args()
 
     service = authenticate_google()
+    print("Successfully authenticated with Google Calendar API.")
 
     if args.command == 'list':
-        print("Successfully authenticated with Google Calendar API.")
         list_upcoming_events(service)
+    elif args.command == 'check':
+        check_schedule_for_day(service, args.date)
+
 
 if __name__ == '__main__':
     main()
