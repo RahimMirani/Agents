@@ -1,5 +1,6 @@
 import os.path
 import datetime as dt
+import argparse
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -53,10 +54,21 @@ def list_upcoming_events(service):
         start = event['start'].get('dateTime', event['start'].get('date'))
         print(start, event['summary'])
 
-if __name__ == '__main__':
+def main():
+    """The main function to run the scheduling agent."""
+    parser = argparse.ArgumentParser(description="A CLI agent to manage your Google Calendar.")
+    parser.add_argument('command', choices=['list'], help='The command to execute (e.g., "list")')
+
+    args = parser.parse_args()
+
     service = authenticate_google()
-    print("Successfully authenticated with Google Calendar API.")
-    list_upcoming_events(service)
+
+    if args.command == 'list':
+        print("Successfully authenticated with Google Calendar API.")
+        list_upcoming_events(service)
+
+if __name__ == '__main__':
+    main()
     
 
 
