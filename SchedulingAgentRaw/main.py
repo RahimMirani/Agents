@@ -200,12 +200,12 @@ def check_availability(service, start_str, end_str):
 def LLM_to_function_call(service, user_input):
     """Uses an LLM to parse a natural language command and execute the corresponding function."""
     load_dotenv()
-    api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
-        print("Error: GOOGLE_API_KEY not found. Please create a .env file with your key.")
+        print("Error: GEMINI_API_KEY not found. Please create a .env file with your key.")
         return
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.0-flash')
 
     # We provide the current time to give the LLM context for relative dates like "tomorrow".
     current_time = dt.datetime.now().isoformat()
@@ -215,7 +215,7 @@ def LLM_to_function_call(service, user_input):
     The current time is {current_time}.
     Analyze the user's request and determine which of the available functions should be called and what parameters to use.
 
-    Available functions:
+    Available functions/tools:
     1. add_event(summary, start_time, end_time, description): Used to create a new event.
        - 'summary' is the event title.
        - 'start_time' and 'end_time' must be in ISO 8601 format (YYYY-MM-DDTHH:MM:SS).
