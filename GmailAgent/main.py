@@ -1,0 +1,1 @@
+## Code for agent with access to gmail. Can perform tasks and actions like sending emails, reading emails, etc.
