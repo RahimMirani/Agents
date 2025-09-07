@@ -216,9 +216,9 @@ def LLM_to_function_call(service, user_input):
     Always use the most appropriate function/tool for the task and be helpful. 
 
     Available functions/tools:
-    1. add_event(summary, start_time, end_time, description): Used to create a new event.
+    1. add_event(summary, start_time_str, end_time_str, description): Used to create a new event.
        - 'summary' is the event title.
-       - 'start_time' and 'end_time' must be in ISO 8601 format (YYYY-MM-DDTHH:MM:SS).
+       - 'start_time_str' and 'end_time_str' must be in ISO 8601 format (YYYY-MM-DDTHH:MM:SS).
        - 'description' is an optional text field.
     2. check_schedule_for_day(date): Used to see all events on a specific day.
        - 'date' must be in YYYY-MM-DD format.
