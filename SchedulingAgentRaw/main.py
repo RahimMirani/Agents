@@ -1,6 +1,5 @@
 import os.path
 import datetime as dt
-import argparse
 import os
 import json
 from tzlocal import get_localzone_name
@@ -277,51 +276,27 @@ def LLM_to_function_call(service, user_input):
         print(f"LLM Response was: {response.text}")
 
 
-
 def main():
-    """The main function to run the scheduling agent."""
-    parser = argparse.ArgumentParser(description="A CLI agent to manage your Google Calendar.")
-    subparsers = parser.add_subparsers(dest='command', required=True, help='Available commands')
-
-    # 'list' command
-    subparsers.add_parser('list', help='List the next 10 upcoming events.')
-
-    # 'check' command
-    parser_check = subparsers.add_parser('check', help='Check the schedule for a specific day.')
-    parser_check.add_argument('--date', type=str, help='The date to check in YYYY-MM-DD format. Defaults to today.')
-
-    # 'add' command
-    parser_add = subparsers.add_parser('add', help='Add a new event to the calendar.')
-    parser_add.add_argument('--summary', type=str, required=True, help='The title of the event.')
-    parser_add.add_argument('--start', type=str, required=True, help='The start time in ISO format (YYYY-MM-DDTHH:MM:SS).')
-    parser_add.add_argument('--end', type=str, required=True, help='The end time in ISO format (YYYY-MM-DDTHH:MM:SS).')
-    parser_add.add_argument('--desc', type=str, help='An optional description for the event.')
-
-    # 'availability' command
-    parser_avail = subparsers.add_parser('availability', help='Check for free slots in a given time range.')
-    parser_avail.add_argument('--start', type=str, required=True, help='The start of the range in ISO format (YYYY-MM-DDTHH:MM:SS).')
-    parser_avail.add_argument('--end', type=str, required=True, help='The end of the range in ISO format (YYYY-MM-DDTHH:MM:SS).')
-
-    # 'ask' command
-    parser_ask = subparsers.add_parser('ask', help='Use natural language to interact with the calendar.')
-    parser_ask.add_argument('query', type=str, help='Your request in plain English, enclosed in quotes.')
-
-    args = parser.parse_args()
-
+    """Runs an interactive CLI loop for the scheduling agent."""
+    print("Authenticating with Google Calendar...")
     service = authenticate_google()
-    print("Successfully authenticated with Google Calendar API.")
+    print("Authentication successful. Welcome to your Scheduling Agent!")
+    print("You can ask me to manage your calendar. Type 'exit' or 'quit' to leave.")
 
-    if args.command == 'list':
-        list_upcoming_events(service)
-    elif args.command == 'check':
-        check_schedule_for_day(service, args.date)
-    elif args.command == 'add':
-        print("Attempting to add a new event...")
-        add_event(service, args.summary, args.start, args.end, args.desc)
-    elif args.command == 'availability':
-        check_availability(service, args.start, args.end)
-    elif args.command == 'ask':
-        LLM_to_function_call(service, args.query)
+    while True:
+        try:
+            user_input = input("\n> ")
+            if user_input.lower() in ['exit', 'quit']:
+                print("Goodbye!")
+                break
+            
+            if not user_input:
+                continue
+
+            LLM_to_function_call(service, user_input)
+        except KeyboardInterrupt:
+            print("\nGoodbye!")
+            break
 
 
 if __name__ == '__main__':
