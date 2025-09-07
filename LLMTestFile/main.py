@@ -1,4 +1,4 @@
-## Scheduling Agent built using the LangChain framework
+## Test file for testing LLM API's
 
 import google.generativeai as genai
 from dotenv import load_dotenv
