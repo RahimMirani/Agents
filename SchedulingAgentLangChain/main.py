@@ -6,6 +6,11 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from langchain.agents import tool
 from tzlocal import get_localzone_name
+import os
+from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain import hub
+from langchain.agents import create_react_agent, AgentExecutor
 
 # If modifying these SCOPES, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
@@ -181,11 +186,41 @@ def check_availability(start_time_str: str, end_time_str: str):
 
 def main():
     """Main entry point for the LangChain scheduling agent."""
+    load_dotenv()
+    if not os.getenv("GOOGLE_API_KEY"):
+        print("Error: GOOGLE_API_KEY not found. Please create or check your .env file.")
+        return
+
     # Authenticate once at the start to ensure credentials are valid
     print("Authenticating with Google Calendar...")
     authenticate_google()
     print("Authentication successful. Welcome to your LangChain Scheduling Agent!")
-    # We will build the agent and interactive loop here in the next steps.
+    
+    tools = [list_upcoming_events, add_event, check_schedule_for_day, check_availability]
+    llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
+    prompt = hub.pull("hwchase17/react")
+    agent = create_react_agent(llm, tools, prompt)
+    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+
+    print("You can now ask me to manage your calendar. Type 'exit' or 'quit' to leave.")
+
+    while True:
+        try:
+            user_input = input("\n> ")
+            if user_input.lower() in ['exit', 'quit']:
+                print("Goodbye!")
+                break
+            
+            if not user_input:
+                continue
+
+            result = agent_executor.invoke({"input": user_input})
+            print(f"\n{result.get('output')}")
+
+        except KeyboardInterrupt:
+            print("\nGoodbye!")
+            break
+
 
 if __name__ == '__main__':
     main()
