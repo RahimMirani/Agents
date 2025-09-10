@@ -19,8 +19,8 @@ def authenticate_google():
     """Authenticates with Google Calendar API and returns a service object."""
     creds = None
     # The file token.json stores the user's access and refresh tokens.
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    if os.path.exists('SchedulingAgentLangChain/token.json'):
+        creds = Credentials.from_authorized_user_file('SchedulingAgentLangChain/token.json', SCOPES)
     
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
@@ -29,11 +29,11 @@ def authenticate_google():
         else:
             # IMPORTANT: Ensure 'credentials.json' is in the same directory
             flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
+                'SchedulingAgentLangChain/credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
         
         # Save the credentials for the next run
-        with open('token.json', 'w') as token:
+        with open('SchedulingAgentLangChain/token.json', 'w') as token:
             token.write(creds.to_json())
 
     service = build('calendar', 'v3', credentials=creds)
