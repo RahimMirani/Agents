@@ -2,10 +2,16 @@ import os.path
 import datetime as dt
 import os
 import json
+import sys
 from tzlocal import get_localzone_name
 from dotenv import load_dotenv
 import google.generativeai as genai
 import dateparser
+
+# Add tracking
+sys.path.append('..')
+from Tracking import start_session, end_session, get_session_summary
+from Tracking.display import display_session_summary
 
 
 from google.auth.transport.requests import Request
@@ -278,25 +284,37 @@ def LLM_to_function_call(service, user_input):
 
 def main():
     """Runs an interactive CLI loop for the scheduling agent."""
-    print("Authenticating with Google Calendar...")
-    service = authenticate_google()
-    print("Authentication successful. Welcome to your Scheduling Agent!")
-    print("You can ask me to manage your calendar. Type 'exit' or 'quit' to leave.")
+    
+    # Start tracking session
+    session_id = start_session()
+    
+    try:
+        print("Authenticating with Google Calendar...")
+        service = authenticate_google()
+        print("Authentication successful. Welcome to your Scheduling Agent!")
+        print("You can ask me to manage your calendar. Type 'exit' or 'quit' to leave.")
 
-    while True:
-        try:
-            user_input = input("\n> ")
-            if user_input.lower() in ['exit', 'quit']:
-                print("Goodbye!")
+        while True:
+            try:
+                user_input = input("\n> ")
+                if user_input.lower() in ['exit', 'quit']:
+                    print("Goodbye!")
+                    break
+                
+                if not user_input:
+                    continue
+
+                LLM_to_function_call(service, user_input)
+            except KeyboardInterrupt:
+                print("\nGoodbye!")
                 break
-            
-            if not user_input:
-                continue
 
-            LLM_to_function_call(service, user_input)
-        except KeyboardInterrupt:
-            print("\nGoodbye!")
-            break
+            
+    finally:
+        # End tracking session and show summary
+        end_session()
+        summary = get_session_summary()
+        display_session_summary(summary)
 
 
 if __name__ == '__main__':
