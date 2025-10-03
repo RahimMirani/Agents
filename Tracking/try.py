@@ -1,4 +1,5 @@
 #No AI Prac
+import asyncio
 
 class Cars:
     def __init__(self, car_name: str, brand: str, milleage: int):
@@ -19,9 +20,14 @@ class Cars:
     
 
 
+class CarsAsync:
+    
+
+
 car_1 = Cars('Civic', 'Honda', 10)
 car_2 = Cars('Dart', 'Dodge', 100)      
 
 fuel = car_1.lifetime_fuel_cost(20)
 print(fuel)
+
 
