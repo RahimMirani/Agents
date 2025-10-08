@@ -31,18 +31,18 @@ def authenticate_google():
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first time.
 
-    if os.path.exists('SchedulingAgentRaw/token.json'):
-        creds = Credentials.from_authorized_user_file('SchedulingAgentRaw/token.json', SCOPES)
+    if os.path.exists('../SchedulingAgentRaw/token.json'):
+        creds = Credentials.from_authorized_user_file('../SchedulingAgentRaw/token.json', SCOPES)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                'SchedulingAgentRaw/credentials.json', SCOPES)
+                '../SchedulingAgentRaw/credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open('SchedulingAgentRaw/token.json', 'w') as token:
+        with open('../SchedulingAgentRaw/token.json', 'w') as token:
             token.write(creds.to_json())
 
     service = build('calendar', 'v3', credentials=creds)
