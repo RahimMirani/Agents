@@ -121,3 +121,48 @@ def track_llm(func: Callable) -> Callable:
             emit_event(event)
 
     return wrapper
+
+def track_api(api_name: str, endpoint: str):
+    """
+    A decorator factory for tracking external API calls (e.g., Google Calendar).
+
+    Args:
+        api_name: The name of the API being called (e.g., 'google_calendar').
+        endpoint: The specific endpoint being hit (e.g., 'events.list').
+    """
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if not is_tracking_enabled():
+                return func(*args, **kwargs)
+
+            start_time = time.perf_counter()
+            error = None
+            result = None
+            status_code = 200 # Assume success unless an error occurs
+
+            try:
+                result = func(*args, **kwargs)
+                return result
+            except Exception as e:
+                error = e
+                # Attempt to get a status code from the error object
+                status_code = getattr(e, 'resp', {}).get('status', 500)
+                raise
+            finally:
+                end_time = time.perf_counter()
+                response_time_ms = (end_time - start_time) * 1000
+
+                event = APICallEvent(
+                    event_type=EventType.API_CALL,
+                    api_name=api_name,
+                    endpoint=endpoint,
+                    method="EXECUTE", # Google API client uses .execute()
+                    response_time_ms=response_time_ms,
+                    status_code=status_code,
+                    success=error is None,
+                    error_message=str(error) if error else None
+                )
+                emit_event(event)
+        return wrapper
+    return decorator

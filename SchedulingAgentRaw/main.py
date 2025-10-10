@@ -12,7 +12,7 @@ import dateparser
 sys.path.append('..')
 from Tracking import start_session, end_session, get_session_summary
 from Tracking.display import display_session_summary
-from Tracking.decorators import track_function, track_llm
+from Tracking.decorators import track_function, track_llm, track_api
 
 
 from google.auth.transport.requests import Request
@@ -24,6 +24,17 @@ from googleapiclient.discovery import build
 # If modifying these SCOPES, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 
+
+def _execute_google_api_call(request, endpoint: str):
+    """Executes a Google API request and tracks it."""
+    # A simple wrapper to apply a decorator dynamically.
+    @track_api(api_name="google_calendar", endpoint=endpoint)
+    def executor():
+        return request.execute()
+    return executor()
+
+
+@track_function
 def authenticate_google():
     """Shows basic usage of the Google Calendar API.
     Prints the start and name of the next 10 events on the user's calendar.
@@ -54,9 +65,10 @@ def list_upcoming_events(service):
     """Lists the next 10 upcoming events from the user's primary calendar."""
     now = dt.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     print('Getting the upcoming 10 events')
-    events_result = service.events().list(calendarId='primary', timeMin=now,
+    events_request = service.events().list(calendarId='primary', timeMin=now,
                                           maxResults=10, singleEvents=True,
-                                          orderBy='startTime').execute()
+                                          orderBy='startTime')
+    events_result = _execute_google_api_call(events_request, "events.list")
     events = events_result.get('items', [])
 
     if not events:
@@ -92,13 +104,14 @@ def check_schedule_for_day(service, date_str=None):
     time_max = dt.datetime.combine(day, dt.time.max, tzinfo=local_tz).isoformat()
 
     print(f"Getting events for {day.strftime('%Y-%m-%d')}...")
-    events_result = service.events().list(
+    events_request = service.events().list(
         calendarId='primary',
         timeMin=time_min,
         timeMax=time_max,
         singleEvents=True,
         orderBy='startTime'
-    ).execute()
+    )
+    events_result = _execute_google_api_call(events_request, "events.list")
     events = events_result.get('items', [])
 
     if not events:
@@ -146,7 +159,8 @@ def add_event(service, summary, start_time_str, end_time_str, description=None):
     }
 
     try:
-        created_event = service.events().insert(calendarId='primary', body=event).execute()
+        insert_request = service.events().insert(calendarId='primary', body=event)
+        created_event = _execute_google_api_call(insert_request, "events.insert")
         print(f"Event created successfully!")
         print(f"View on Google Calendar: {created_event.get('htmlLink')}")
     except Exception as e:
@@ -166,13 +180,14 @@ def check_availability(service, start_str, end_str):
 
     print(f"Checking for availability from {start_time} to {end_time}...")
 
-    events_result = service.events().list(
+    events_request = service.events().list(
         calendarId='primary',
         timeMin=start_time.isoformat() + 'Z',
         timeMax=end_time.isoformat() + 'Z',
         singleEvents=True,
         orderBy='startTime'
-    ).execute()
+    )
+    events_result = _execute_google_api_call(events_request, "events.list")
     events = events_result.get('items', [])
 
     if not events:
