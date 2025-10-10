@@ -5,7 +5,7 @@ import time
 import functools
 from typing import Callable, Any
 
-from .events import emit_event, FunctionCallEvent, LLMCallEvent, APICallEvent, ErrorEvent
+from .events import emit_event, FunctionCallEvent, LLMCallEvent, APICallEvent, ErrorEvent, EventType
 from .config import is_tracking_enabled
 
 def track_function(func: Callable) -> Callable:
@@ -106,6 +106,7 @@ def track_llm(func: Callable) -> Callable:
             estimated_cost = (total_tokens / 1000) * 0.0001
 
             event = LLMCallEvent(
+                event_type=EventType.LLM_CALL,
                 model_name=model_name.split('/')[-1], # Clean up model name
                 prompt_length=len(prompt) if prompt else 0,
                 response_length=len(llm_response_text),
