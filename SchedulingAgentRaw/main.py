@@ -12,6 +12,7 @@ import dateparser
 sys.path.append('..')
 from Tracking import start_session, end_session, get_session_summary
 from Tracking.display import display_session_summary
+from Tracking.decorators import track_function
 
 
 from google.auth.transport.requests import Request
@@ -48,6 +49,7 @@ def authenticate_google():
     service = build('calendar', 'v3', credentials=creds)
     return service
 
+@track_function
 def list_upcoming_events(service):
     """Lists the next 10 upcoming events from the user's primary calendar."""
     now = dt.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
