@@ -231,6 +231,7 @@ def LLM_to_function_call(service, user_input):
     You are a helpful assistant that translates natural language commands into structured JSON function calls for a Google Calendar agent.
     The current time is {current_time}.
     Analyze the user's request and determine which of the available functions should be called and what parameters to use.
+    If there are no functions to be called, just answer the user casually and help them with their request, or do a conversation.
     Always use the most appropriate function/tool for the task and be helpful. 
 
     Available functions/tools:
