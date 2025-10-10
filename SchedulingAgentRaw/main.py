@@ -12,7 +12,7 @@ import dateparser
 sys.path.append('..')
 from Tracking import start_session, end_session, get_session_summary
 from Tracking.display import display_session_summary
-from Tracking.decorators import track_function
+from Tracking.decorators import track_function, track_llm
 
 
 from google.auth.transport.requests import Request
@@ -207,6 +207,12 @@ def check_availability(service, start_str, end_str):
             print(f"- From {slot_start.strftime('%Y-%m-%d %I:%M %p')} to {slot_end.strftime('%Y-%m-%d %I:%M %p')}")
 
 
+@track_llm
+def _generate_gemini_response(service, model, prompt, user_input):
+    """Generates content using the Gemini model and is tracked."""
+    return model.generate_content(prompt)
+
+
 @track_function
 def LLM_to_function_call(service, user_input):
     """Uses an LLM to parse a natural language command and execute the corresponding function."""
@@ -260,7 +266,7 @@ def LLM_to_function_call(service, user_input):
     """
 
     try:
-        response = model.generate_content(prompt)
+        response = _generate_gemini_response(service, model, prompt, user_input=user_input)
         # Clean up the response from the LLM, which might be wrapped in ```json ... ```
         cleaned_response = response.text.strip().replace('```json', '').replace('```', '').strip()
         
