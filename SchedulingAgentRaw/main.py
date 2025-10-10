@@ -75,6 +75,7 @@ def list_upcoming_events(service):
 
         print(f"{start_formatted} - {event['summary']}")
 
+@track_function
 def check_schedule_for_day(service, date_str=None):
     """Checks the schedule for a given day and prints the events."""
     if date_str:
@@ -116,6 +117,7 @@ def check_schedule_for_day(service, date_str=None):
 
         print(f"- {start_formatted}: {event['summary']}")
 
+@track_function
 def add_event(service, summary, start_time_str, end_time_str, description=None):
     """Adds a new event to the primary calendar."""
     try:
@@ -151,6 +153,7 @@ def add_event(service, summary, start_time_str, end_time_str, description=None):
         print(f"An error occurred: {e}")
 
 
+@track_function
 def check_availability(service, start_str, end_str):
     """Finds and prints free slots in the calendar within a given time range."""
     try:
@@ -204,6 +207,7 @@ def check_availability(service, start_str, end_str):
             print(f"- From {slot_start.strftime('%Y-%m-%d %I:%M %p')} to {slot_end.strftime('%Y-%m-%d %I:%M %p')}")
 
 
+@track_function
 def LLM_to_function_call(service, user_input):
     """Uses an LLM to parse a natural language command and execute the corresponding function."""
     load_dotenv()
